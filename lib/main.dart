@@ -9,44 +9,77 @@ import 'package:mynotes/pages/registerationpage.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MaterialApp(
+    routes: {
+      '/login/': (context) => const loginpage(),
+      '/register/': (context) => const registerationpage(),
+      '/verification/': (context) => const verifyview(),
+    },
     debugShowCheckedModeBanner: false,
     title: 'MyNotes',
     theme: ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       useMaterial3: true,
     ),
-    home: homepage(),
+    home: navigation(),
   ));
 }
 
-class homepage extends StatelessWidget {
+class navigation extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: Firebase.initializeApp(
+            options: DefaultFirebaseOptions.currentPlatform),
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.done:
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                if (user.emailVerified) {
+                  print('the email is verified !');
+                } else {
+                  return const verifyview();
+                }
+              } else {
+                return const loginpage();
+              }
+              return const Center(
+                child: Icon(Icons.done),
+              );
+            default:
+              return const CircularProgressIndicator();
+          }
+        });
+  }
+}
+
+class verifyview extends StatefulWidget {
+  const verifyview({super.key});
+
+  @override
+  State<verifyview> createState() => _verifyviewState();
+}
+
+class _verifyviewState extends State<verifyview> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('home'),
+        title: Text("verification"),
       ),
-      body: FutureBuilder(
-          future: Firebase.initializeApp(
-              options: DefaultFirebaseOptions.currentPlatform),
-          builder: (context, snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.done:
-                final user = FirebaseAuth.instance.currentUser;
-                if (user?.emailVerified ?? false) {
-                  // print("you are verified user!");
-                 Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const loginpage()));
-                } else {
-                  // print("please do register your email !");
-                     Navigator.push(context,
-                      MaterialPageRoute(builder: (context) =>const  registerationpage()));
-                }
-                return const Text('done');
-              default:
-                return const Text("loading.........");
-            }
-          }),
+      body: Center(
+        child: Column(
+          children: [
+            Text('please verify your email !'),
+            TextButton(
+                onPressed: () {
+                  final user = FirebaseAuth.instance.currentUser;
+                  user?.sendEmailVerification();
+                },
+                child: Text('verify'))
+          ],
+        ),
+      ),
     );
   }
 }
