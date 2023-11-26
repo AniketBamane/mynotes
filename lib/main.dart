@@ -1,8 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:mynotes/constants.dart';
 import 'package:mynotes/firebase_options.dart';
+import 'package:mynotes/pages/homepage.dart';
 import 'package:mynotes/pages/loginpage.dart';
 import 'package:mynotes/pages/registerationpage.dart';
 
@@ -10,9 +11,10 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MaterialApp(
     routes: {
-      '/login/': (context) => const loginpage(),
-      '/register/': (context) => const registerationpage(),
-      '/verification/': (context) => const verifyview(),
+      loginRoute: (context) => const loginpage(),
+      registerationRoute: (context) => const registerationpage(),
+      verificationRoute: (context) => const verifyview(),
+      notesRoute: (context) => const notesView(),
     },
     debugShowCheckedModeBanner: false,
     title: 'MyNotes',
@@ -36,16 +38,13 @@ class navigation extends StatelessWidget {
               final user = FirebaseAuth.instance.currentUser;
               if (user != null) {
                 if (user.emailVerified) {
-                  print('the email is verified !');
+                  return notesView();
                 } else {
-                  return const verifyview();
+                  return const loginpage();
                 }
               } else {
-                return const loginpage();
+                return const registerationpage();
               }
-              return const Center(
-                child: Icon(Icons.done),
-              );
             default:
               return const CircularProgressIndicator();
           }
@@ -76,7 +75,14 @@ class _verifyviewState extends State<verifyview> {
                   final user = FirebaseAuth.instance.currentUser;
                   user?.sendEmailVerification();
                 },
-                child: Text('verify'))
+                child: Text('verify')),
+            TextButton(
+                onPressed: () {
+                  FirebaseAuth.instance.signOut();
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                      registerationRoute, (route) => false);
+                },
+                child: Text('restart'))
           ],
         ),
       ),

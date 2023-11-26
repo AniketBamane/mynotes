@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mynotes/constants.dart';
 import 'package:mynotes/pages/loginpage.dart';
 
 class registerationpage extends StatefulWidget {
@@ -63,23 +64,26 @@ class _registerationpageState extends State<registerationpage> {
                   try {
                     final email = _email.text;
                     final password = _password.text;
-                    final credential = await FirebaseAuth.instance
-                        .createUserWithEmailAndPassword(
-                            email: email, password: password);
-                    print(credential);
+                    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                        email: email, password: password);
+                    final user = FirebaseAuth.instance.currentUser;
+                    user?.sendEmailVerification();
+                    Navigator.of(context).pushNamed(verificationRoute);
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'email-already-in-use') {
-                      print("the email is invalid  !");
+                      return errorScreen(context, e.code);
                     } else {
-                      print(e.code);
+                      return errorScreen(context, e.code);
                     }
+                  } catch (e) {
+                    return errorScreen(context, e.toString());
                   }
                 },
                 child: Text('Register')),
             TextButton(
                 onPressed: () {
                   Navigator.of(context)
-                      .pushNamedAndRemoveUntil('/login/', (route) => false);
+                      .pushNamedAndRemoveUntil(loginRoute, (route) => false);
                 },
                 child: Text('have already registered ? login here?'))
           ],

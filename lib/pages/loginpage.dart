@@ -1,5 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:developer' as devtools show log;
+
+import 'package:mynotes/constants.dart';
 
 class loginpage extends StatefulWidget {
   const loginpage({super.key});
@@ -61,24 +64,29 @@ class _loginpageState extends State<loginpage> {
                   try {
                     final email = _email.text;
                     final password = _password.text;
-                    final credential = await FirebaseAuth.instance
-                        .signInWithEmailAndPassword(
-                            email: email, password: password);
+                    await FirebaseAuth.instance.signInWithEmailAndPassword(
+                        email: email, password: password);
+                    // ignore: uske_build_context_synchronously
+                    Navigator.of(context)
+                        .pushNamedAndRemoveUntil(notesRoute, (route) => false);
+                    // devtools.log(credential.toString());
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'invalid-credential') {
-                      print("the password is not right");
+                      return errorScreen(context, 'credentials are invalid  !');
                     } else if (e.code == 'invalid-email') {
-                      print("the email must be correct !");
+                      return errorScreen(context, 'email is invalid');
                     } else {
-                      print("you are loged in !");
+                      return errorScreen(context, e.code);
                     }
+                  } catch (e) {
+                    return errorScreen(context, e.toString());
                   }
                 },
                 child: Text('login')),
             TextButton(
                 onPressed: () {
-                  Navigator.of(context)
-                      .pushNamedAndRemoveUntil('/register/', (route) => false);
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                      registerationRoute, (route) => false);
                 },
                 child: Text('have not registered? register here ? '))
           ],
