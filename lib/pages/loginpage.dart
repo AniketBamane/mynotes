@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as devtools show log;
-
-import 'package:mynotes/constants.dart';
+// import 'dart:developer' as devtools show log;
+import 'package:mynotes/constant/constants.dart';
+import 'package:mynotes/services/auth/auth_exceptions.dart';
+import 'package:mynotes/services/auth/auth_service.dart';
 
 class loginpage extends StatefulWidget {
   const loginpage({super.key});
@@ -64,22 +64,23 @@ class _loginpageState extends State<loginpage> {
                   try {
                     final email = _email.text;
                     final password = _password.text;
-                    await FirebaseAuth.instance.signInWithEmailAndPassword(
-                        email: email, password: password);
-                    // ignore: uske_build_context_synchronously
-                    Navigator.of(context)
-                        .pushNamedAndRemoveUntil(notesRoute, (route) => false);
-                    // devtools.log(credential.toString());
-                  } on FirebaseAuthException catch (e) {
-                    if (e.code == 'invalid-credential') {
-                      return errorScreen(context, 'credentials are invalid  !');
-                    } else if (e.code == 'invalid-email') {
-                      return errorScreen(context, 'email is invalid');
+                    await AuthService.firebase()
+                        .login(email: email, password: password);
+                    final user = AuthService.firebase().currentUser;
+                    if (user?.isEmailVerified ?? false) {
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                          notesRoute, (route) => false);
                     } else {
-                      return errorScreen(context, e.code);
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                          verificationRoute, (route) => false);
                     }
-                  } catch (e) {
-                    return errorScreen(context, e.toString());
+                  } on UserNotFoundEXception {
+                    await errorWindow(context, 'user not found !');
+                  } on WrongPasswordException {
+                    await errorWindow(context, 'password is wrong !');
+                  } on GenericException {
+                    await errorWindow(context,
+                        'authentication error, please check your credentials !');
                   }
                 },
                 child: Text('login')),
@@ -94,4 +95,22 @@ class _loginpageState extends State<loginpage> {
       ),
     );
   }
+}
+
+Future<bool> errorWindow(BuildContext context, String message) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Error !'),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(true);
+          },
+          child: Text('ok'),
+        ),
+      ],
+    ),
+  ).then((value) => value ?? true);
 }

@@ -1,7 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mynotes/constants.dart';
+import 'package:mynotes/constant/constants.dart';
+import 'package:mynotes/services/auth/auth_exceptions.dart';
+import 'package:mynotes/services/auth/auth_service.dart';
 import 'package:mynotes/pages/loginpage.dart';
 
 class registerationpage extends StatefulWidget {
@@ -64,19 +64,19 @@ class _registerationpageState extends State<registerationpage> {
                   try {
                     final email = _email.text;
                     final password = _password.text;
-                    await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                        email: email, password: password);
-                    final user = FirebaseAuth.instance.currentUser;
-                    user?.sendEmailVerification();
+                    await AuthService.firebase()
+                        .register(email: email, password: password);
+                    AuthService.firebase().sendEmailNotification();
                     Navigator.of(context).pushNamed(verificationRoute);
-                  } on FirebaseAuthException catch (e) {
-                    if (e.code == 'email-already-in-use') {
-                      return errorScreen(context, e.code);
-                    } else {
-                      return errorScreen(context, e.code);
-                    }
-                  } catch (e) {
-                    return errorScreen(context, e.toString());
+                  } on EmailAlreadyInUseException {
+                    await errorWindow(context, 'email is already in use');
+                  } on InvalidEmailException {
+                    await errorWindow(context, 'the email is not valid  !');
+                  } on WeakPasswordException {
+                    await errorWindow(
+                        context, 'password is too weak  ! , change it .');
+                  } on GenericException {
+                    await errorWindow(context, 'user registeration failed !');
                   }
                 },
                 child: Text('Register')),

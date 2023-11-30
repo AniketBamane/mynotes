@@ -1,0 +1,17 @@
+registeration view:
+exceptions:
+1.weak-password
+2.email-already-in-use
+3.invalid-email
+
+login view 
+exceptions:
+1.user-not-found
+2.wrong-password
+
+
+generic exceptions:
+1.generic exception
+2.usernotloggedin exception
+
+
