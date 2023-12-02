@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 const loginRoute = '/login/';
 const registerationRoute = '/register/';
 const verificationRoute = '/verification/';
-const notesRoute = '/notes/';
+const notesRoute = '/notesView/';
+const notePageRoute = '/notePage/';
 
 Future<void> errorScreen(BuildContext context, String text) {
   return showDialog(
@@ -16,7 +17,7 @@ Future<void> errorScreen(BuildContext context, String text) {
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child:const  Text('ok'))
+            child: const Text('ok'))
       ],
     ),
   );

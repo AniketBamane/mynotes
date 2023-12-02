@@ -2,6 +2,7 @@ import 'dart:developer' as devtools show log;
 import 'package:flutter/material.dart';
 import 'package:mynotes/constant/constants.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
+import 'package:mynotes/services/crud/notes_service.dart';
 
 class notesView extends StatefulWidget {
   const notesView({super.key});
@@ -18,21 +19,41 @@ enum menuitem {
 }
 
 class _notesViewState extends State<notesView> {
+  late final NoteService _noteService;
+  final user = AuthService.firebase().currentUser!.email!;
+  @override
+  void initState() {
+    _noteService = NoteService();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _noteService.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:const  Text('Notes'),
+        title: const Text('Notes'),
         actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.of(context).pushNamed(notePageRoute);
+              },
+              icon: Icon(Icons.add)),
           PopupMenuButton<menuitem>(
             onSelected: (value) async {
               switch (value) {
                 case menuitem.logout:
                   final shouldlogout = await logoutwindow(context);
                   devtools.log(shouldlogout.toString());
-                  if(shouldlogout == true) {
+                  if (shouldlogout == true) {
                     await AuthService.firebase().logOut();
-                    Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (_) =>false);
+                    Navigator.of(context)
+                        .pushNamedAndRemoveUntil(loginRoute, (_) => false);
                   }
                 case menuitem.signin:
                   break;
@@ -60,11 +81,30 @@ class _notesViewState extends State<notesView> {
                 child: Text('notes'),
               ),
             ],
-          )
+          ),
         ],
       ),
-      body: const Center(
-        child: Text('no notes found !'),
+      body: FutureBuilder(
+        future: _noteService.getOrCreateUser(email: user),
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.done:
+              return StreamBuilder(
+                stream: _noteService.allNotes,
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                    case ConnectionState.active:
+                      return const Text('waiting for all notes.....');
+                    default:
+                      return const CircularProgressIndicator();
+                  }
+                },
+              );
+            default:
+              return const CircularProgressIndicator();
+          }
+        },
       ),
     );
   }

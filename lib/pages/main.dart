@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mynotes/constant/constants.dart';
+import 'package:mynotes/pages/notes/note_page.dart';
 import 'package:mynotes/services/auth/auth_service.dart';
-import 'package:mynotes/pages/homepage.dart';
+import 'package:mynotes/pages/notes/notes_view.dart';
 import 'package:mynotes/pages/loginpage.dart';
 import 'package:mynotes/pages/registerationpage.dart';
 
@@ -13,6 +14,7 @@ void main() {
       registerationRoute: (context) => const registerationpage(),
       verificationRoute: (context) => const verifyview(),
       notesRoute: (context) => const notesView(),
+      notePageRoute: (context) => const notePage(),
     },
     debugShowCheckedModeBanner: false,
     title: 'MyNotes',
@@ -20,7 +22,7 @@ void main() {
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       useMaterial3: true,
     ),
-    home: navigation(),
+    home: notePage(),
   ));
 }
 
